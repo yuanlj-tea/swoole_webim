@@ -10,6 +10,8 @@ class hsw{
 
     private $swoole_set=[
         'task_worker_num'=>8,
+        'heartbeat_check_interval' => 30,
+        'heartbeat_idle_time' => 60,
     ];
 
     public function __construct()
@@ -82,6 +84,15 @@ class hsw{
                     'roomid'=>$data['roomid']
                 ];
                 $this->serv->task(json_encode($data));
+                break;
+            case 'heartbeat':
+                $data=[
+                    'code'=>7,
+                    'type'=>'heartbeat',
+                    'msg'=>'ok'
+                ];
+                $this->serv->push($frame->fd,json_encode($data));
+                return 'Finished';
                 break;
             default:
                 $this->serv->push($frame->fd,json_encode(array('code'=>0,'msg'=>'type error')));

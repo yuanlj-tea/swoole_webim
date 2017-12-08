@@ -97,7 +97,7 @@ class Chat{
         return $pushMsg;
     }
 
-    public function doLogout($data)
+    public static function doLogout($data)
     {
         //删除
         File::logout($data['fd']);
