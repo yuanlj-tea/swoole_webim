@@ -170,6 +170,7 @@ var chat = {
                     chat.displayError('chatErrorMessage_logout', d.msg, 1);
                     break;
                 case 4: //页面初始化
+                    console.log(d);
                     chat.initPage(d.data);
                     break;
                 case 5:

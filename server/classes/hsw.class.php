@@ -34,7 +34,7 @@ class hsw{
             'fd'=>$request->fd
         ];
         $this->serv->task(json_encode($data));
-        echo 'open\n';
+        echo "open\n";
     }
 
     public function onMessage($serv,$frame)
@@ -153,7 +153,7 @@ class hsw{
             if($fd == $myfd){
                 $pushMsg['data']['mine']=1;
             }else{
-                $pushMsg['data']['mine']=1;
+                $pushMsg['data']['mine']=0;
             }
             $this->serv->push($fd,json_encode($pushMsg));
         }
