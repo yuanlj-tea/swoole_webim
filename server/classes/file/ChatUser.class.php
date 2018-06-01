@@ -37,7 +37,9 @@ class ChatUser extends ChatBase {
     public function getUsersByRoom($roomid)
     {
         $lists=File::getUsersByRoom($roomid);
+
         $info=$this->getUsers($roomid,array_slice($lists,0,100));
+        
         return $info;
     }
 

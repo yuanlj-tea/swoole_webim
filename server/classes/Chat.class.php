@@ -40,9 +40,20 @@ class Chat{
     {
         $user=new ChatUser();
         $lists=$user->getOnlineUsers();
+
+        //$lists = [1,2,3,4,5,6];
+
         $users=array();
         foreach($lists as $_k=>$_v){
             $users[$_k]=$user->getUser($_k,array_slice($_v,0,100));
+
+            /*$users[$_k]=[
+                'name' => 'a',
+                'avatar' => 'http://192.168.79.206:8081/static/images/avatar/f1/f_12.jpg',
+                'email' => '1107806823@qq.com',
+                'fd' => 4,
+                'time' => "07:02"
+            ];*/
         }
         unset($lists);
         return $users;
@@ -127,6 +138,7 @@ class Chat{
                 $pushMsg['data']['newmessage'] = str_replace($_k,$_v,$pushMsg['data']['newmessage']);
             }
             $tmp = self::remind($data['roomid'],$pushMsg['data']['newmessage']);
+
             if($tmp){
                 $pushMsg['data']['newmessage'] = $tmp['msg'];
                 $pushMsg['data']['remains'] = $tmp['remains'];

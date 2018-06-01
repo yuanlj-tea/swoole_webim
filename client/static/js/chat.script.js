@@ -4,6 +4,7 @@ $(document).ready(function () {
     chat.init();
     setInterval('heartbeat()',50000);
 });
+
 function heartbeat(){
     var json = {
         "type": 'heartbeat',
@@ -247,6 +248,7 @@ var chat = {
      * 填充房间用户列表
      */
     initUsers: function (data) {
+        //console.log(data);
         if (getJsonLength(data)) {
             for (var item in data) {
                 var users = [];
@@ -420,7 +422,7 @@ var chat = {
         }
     },
     copyright: function () {
-        //console.log("您好！不介意的话可以加QQ讨论学习（1335244575）");
+        //console.log("您好！不介意的话可以加QQ讨论学习（1107806823）");
     },
     print: function (flag, obj) {
         console.log('----' + flag + ' start-------');
