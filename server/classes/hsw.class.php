@@ -18,7 +18,7 @@ class hsw
 
     public function __construct()
     {
-        File::init();
+        //File::init();
         $this->serv = new swoole_websocket_server('0.0.0.0', '9501');
         $this->serv->set($this->swoole_set);
         $this->serv->on('open', array($this, 'onOpen'));
@@ -108,27 +108,30 @@ class hsw
         $data = json_decode($data, true);
         switch ($data['task']) {
             case 'open':
-                $pushMsg = Chat::open($data);
-                $pushMsg['data']['redis'] = Room::getOnlineUsers();
+                //$pushMsg = Chat::open($data);
+                $pushMsg = Room::open();
                 $this->serv->push($data['fd'], json_encode($pushMsg));
                 return 'Finished';
             case 'login':
-                $pushMsg = Chat::doLogin($data);
-                Room::doLogin($data);
+                //$pushMsg = Chat::doLogin($data);
+                $pushMsg = Room::doLogin($data);
                 break;
             case 'new':
-                $pushMsg = Chat::sendNewMsg($data);
+                //$pushMsg = Chat::sendNewMsg($data);
+                $pushMsg = Room::sendNewMsg($data);
                 break;
             case 'logout':
-                $pushMsg = Chat::doLogout($data);
+                //$pushMsg = Chat::doLogout($data);
+                $pushMsg = Room::doLogout($data);
                 break;
             case 'nologin':
-                $pushMsg = Chat::noLogin($data);
-                $this->serv->push($data['fd'], json_encode($pushMsg));
+                //$pushMsg = Chat::noLogin($data);
+                //$this->serv->push($data['fd'], json_encode($pushMsg));
                 return 'Finished';
                 break;
             case 'change':
-                $pushMsg = Chat::change($data);
+                //$pushMsg = Chat::change($data);
+                $pushMsg = Room::changeRoom($data);
                 break;
         }
         $this->sendMsg($pushMsg, $data['fd']);
@@ -139,7 +142,8 @@ class hsw
     {
         $pushMsg = array('code' => 0, 'msg' => '', 'data' => array());
         #获取用户信息
-        $user = Chat::logout('', $fd);
+        //$user = Chat::logout('', $fd);
+        $user = Room::getUserInfoByFd($fd);
         if ($user) {
             $data = array(
                 'task' => 'logout',

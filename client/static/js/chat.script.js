@@ -5,6 +5,7 @@ $(document).ready(function () {
     setInterval('heartbeat()',50000);
 });
 
+//发送心跳包
 function heartbeat(){
     var json = {
         "type": 'heartbeat',
@@ -55,7 +56,7 @@ var chat = {
         chat.data.type = 1; //登录标志
         chat.data.email = email; //邮箱
         chat.data.login = true;
-        var json = {"type": chat.data.type, "name": name, "email": email, 'roomid': 'a'};
+        var json = {"type": chat.data.type, "name": name, "email": email, 'roomid': '1'};
         chat.wsSend(JSON.stringify(json));
         return false;
 
@@ -201,7 +202,6 @@ var chat = {
     },
     wsOnclose: function () {
         this.data.wSock.onclose = function (event) {
-            //alert('已断开连接');
             layer.open({
                 content: '已断开连接',
                 success: function(layero, index){
@@ -212,7 +212,7 @@ var chat = {
     },
     wsOnerror: function () {
         this.data.wSock.onerror = function (event) {
-            //alert('服务器已关闭');
+            
             layer.open({
                 content: '服务器已关闭',
                 success: function(layero, index){

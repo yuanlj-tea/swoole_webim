@@ -16,7 +16,7 @@ class Room
     public static $onLine = 'onLine';
 
     //登录后的用户对应的user_id key
-    public static $chatUser = 'char_user';
+    public static $chatUser = 'chat_user';
 
     public static function getRedis()
     {
@@ -149,10 +149,12 @@ class Room
         $arr = [];
 
         foreach ($rooms as $k => $v) {
-            $arr[] = [
-                'room_id' => $v,
-                'user_fd' => self::selectRoomFd($v),
-            ];
+//            $arr[] = [
+//                'room_id' => $v,
+//                'user_fd' => self::selectRoomFd($v),
+//            ];
+            //每个房间对应的用户信息
+            $arr[$v] = self::getUsersByRoom($v);
         }
 
         return $arr;
@@ -178,8 +180,9 @@ class Room
         $userId = end($user) + 1;  //用户userId
         self::getRedis()->hSet(self::$chatUser, $userId, json_encode($pushMsg['data']));
         self::getRedis()->set($userId, $data['params']['name']);
-
-        //self::login($data['roomid'], $data['fd'], $data['params']['name'], $data['params']['email'], $pushMsg['data']['avatar']);
+        //加入房间
+        self::joinRoom($data['roomid'], $data['fd']);
+        //登录
         self::login($userId, $data['fd']);
         unset($data);
 
@@ -204,47 +207,156 @@ class Room
             foreach ($emotion as $_k => $_v) {
                 $pushMsg['data']['newmessage'] = str_replace($_k, $_v, $pushMsg['data']['newmessage']);
             }
-//            $tmp = self::remind($data['roomid'], $pushMsg['data']['newmessage']);
-//            if ($tmp) {
-//                $pushMsg['data']['newmessage'] = $tmp['msg'];
-//                $pushMsg['data']['remains'] = $tmp['remains'];
-//            }
-//            unset($tmp);
+            $tmp = self::remind($data['roomid'], $pushMsg['data']['newmessage']);
+
+            if ($tmp) {
+                $pushMsg['data']['newmessage'] = $tmp['msg'];
+                $pushMsg['data']['remains'] = $tmp['remains'];
+            }
+            unset($tmp);
         }
         $pushMsg['data']['time'] = date("H:i", time());
         unset($data);
         return $pushMsg;
     }
 
-    public static function remind($roomid,$msg){
+    public static function remind($roomid, $msg)
+    {
         $data = array();
-        if( $msg != ""){
+        if ($msg != "") {
             $data['msg'] = $msg;
             //正则匹配出所有@的人来
-            $s = preg_match_all( '~@(.+?)　~' , $msg, $matches  ) ;
-            if($s){
-                $m1 = array_unique( $matches[0] );
-                $m2 = array_unique( $matches[1] );
-                $user = new ChatUser();
-                $users = $user->getUsersByRoom($roomid);
+            $s = preg_match_all('~@(.+?)　~', $msg, $matches);
+            if ($s) {
+                $m1 = array_unique($matches[0]);
+                $m2 = array_unique($matches[1]);
+
+                $users = self::getUsersByRoom($roomid);
+
                 $m3 = array();
-                foreach($users as $_k => $_v){
+                foreach ($users as $_k => $_v) {
                     $m3[$_v['name']] = $_v['fd'];
                 }
                 $i = 0;
-                foreach($m2 as $_k => $_v){
-                    if(array_key_exists($_v,$m3)){
-                        $data['msg'] = str_replace($m1[$_k],'<font color="blue">'.trim($m1[$_k]).'</font>',$data['msg']);
+                foreach ($m2 as $_k => $_v) {
+                    if (array_key_exists($_v, $m3)) {
+                        $data['msg'] = str_replace($m1[$_k], '<font color="blue">' . trim($m1[$_k]) . '</font>', $data['msg']);
                         $data['remains'][$i]['fd'] = $m3[$_v];
                         $data['remains'][$i]['name'] = $_v;
                         $i++;
                     }
                 }
                 unset($users);
-                unset($m1,$m2,$m3);
+                unset($m1, $m2, $m3);
             }
         }
         return $data;
+    }
+
+    /**
+     * 获取指定房间里的用户信息
+     * @param $roomId
+     * @return array
+     */
+    public static function getUsersByRoom($roomId)
+    {
+        $lists = self::selectRoomFd($roomId);
+
+        $arr = [];
+        foreach ($lists as $k => $v) {
+            $userId = self::getUserId($v);
+            $userInfo = self::getRedis()->hGet(self::$chatUser, $userId);
+
+            $arr[] = json_decode($userInfo, true);
+        }
+
+        return $arr;
+
+    }
+
+    /**
+     * 客户端关闭连接,退出登录
+     * @param $data
+     * @return mixed
+     */
+    public static function doLogout($data)
+    {
+        //退出登录,删除相关redis信息
+        self::logout($data['fd']);
+
+        $pushMsg['code'] = 3;
+        $pushMsg['msg'] = $data['params']['name'] . "退出了群聊";
+        $pushMsg['data']['fd'] = $data['fd'];
+        $pushMsg['data']['name'] = $data['params']['name'];
+        unset($data);
+        return $pushMsg;
+    }
+
+    /**
+     * 退出登录需要清除的redis数据
+     * @param $fd
+     */
+    public static function logout($fd)
+    {
+        $userId = self::getUserId($fd);
+        //关闭连接
+        self::close($fd);
+
+        //从用户中删除
+        self::getRedis()->hdel(self::$chatUser, $userId);
+        self::getRedis()->del($userId);
+
+    }
+
+    /**
+     * 更换房间
+     * @param $data
+     */
+    public static function changeRoom($data)
+    {
+        $pushMsg['code'] = 6;
+        $pushMsg['msg'] = '换房成功';
+
+        $res = self::changeUser($data['oldroomid'], $data['fd'], $data['roomid']);
+        if ($res) {
+            $pushMsg['data']['oldroomid'] = $data['oldroomid'];
+            $pushMsg['data']['roomid'] = $data['roomid'];
+            $pushMsg['data']['mine'] = 0;
+            $pushMsg['data']['fd'] = $data['fd'];
+            $pushMsg['data']['name'] = $data['params']['name'];
+            $pushMsg['data']['avatar'] = $data['params']['avatar'];
+            $pushMsg['data']['time'] = date("H:i", time());
+            unset($data);
+            return $pushMsg;
+        }
+    }
+
+    /**
+     * 切换房间需要更改的redis数据
+     * @param $oldRoomId
+     * @param $fd
+     * @param $newRoomId
+     */
+    public static function changeUser($oldRoomId, $fd, $newRoomId)
+    {
+        //退出老房间
+        self::exitRoom($oldRoomId, $fd);
+        //加入新房间
+        self::joinRoom($newRoomId, $fd);
+
+        return true;
+    }
+
+    /**
+     * 通过客户端连接ID 获取用户的基本信息
+     * @param $fd
+     * @return mixed
+     */
+    public static function getUserInfoByFd($fd)
+    {
+        $userId = self::getUserId($fd);
+        $userInfo = self::getRedis()->hGet(self::$chatUser, $userId);
+        return json_decode($userInfo, true);
     }
 
 }

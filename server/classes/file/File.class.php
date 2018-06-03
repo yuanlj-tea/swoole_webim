@@ -83,7 +83,7 @@ class File
     //登录
     public static function login($roomid, $fd, $info)
     {
-        $flag = @file_put_contents(self::$instance->online_dir . $roomid . DIRECTORY_SEPARATOR . $fd, @serialize($info));
+        $flag = file_put_contents(self::$instance->online_dir . $roomid . DIRECTORY_SEPARATOR . $fd, @serialize($info));
         return $flag;
     }
 
