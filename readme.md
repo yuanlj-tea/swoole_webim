@@ -2,7 +2,7 @@
 
 2.打开server目录，首先将rooms目录以及其子目录权限设为777，确保该目录可写。将client/uploads目录设置为777可写。
 
-3.修改server/config.inc.php 文件。将下面一行代码修改为您的域名或者IP。
+3.修改server/config.inc.php 文件。修改DOMAIN和redis配置。
 
 > define("DOMAIN","[http://192.168.79.206.:8081](http://192.168.79.206:8081/)");
 
