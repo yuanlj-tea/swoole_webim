@@ -1,9 +1,9 @@
 <?php
 
-
 //header("Access-Control-Allow-Origin:*");
 //header( " Access-Control-Allow-Methods: POST,GET " );
 include "./classes/upload.class.php";
+require_once dirname(__FILE__)."/../server/config.inc.php";
 //包含上传文件类
 
 //设置文件上传目录
@@ -35,7 +35,7 @@ if (!$f->run('upload', 1)) {
     //echo $f->errmsg()."<br>\n";
 }
 $arr = $f->getInfo();
-$url = "http://192.168.1.208:8002/uploads/" . $arr[0]['saveName'];
+$url = DOMAIN."/uploads/" . $arr[0]['saveName'];
 //上传结果保存在数组returnArray中。saveName
 $data = array('err' => "", 'msg' => array('url' => $url, 'localname' => $_FILES['upload']['name']));
 

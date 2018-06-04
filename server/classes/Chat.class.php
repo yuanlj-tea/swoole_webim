@@ -140,7 +140,7 @@ class Chat
                 $pushMsg['data']['newmessage'] = str_replace($_k, $_v, $pushMsg['data']['newmessage']);
             }
             $tmp = self::remind($data['roomid'], $pushMsg['data']['newmessage']);
-print_r($tmp);
+
             if ($tmp) {
                 $pushMsg['data']['newmessage'] = $tmp['msg'];
                 $pushMsg['data']['remains'] = $tmp['remains'];
