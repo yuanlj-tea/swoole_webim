@@ -6,9 +6,6 @@
 
 > define("DOMAIN","[http://192.168.79.206.:8081](http://192.168.79.206:8081/)");
 
-并且将下面这样修改为rooms目录所在的路径
-
-> define('ONLINE_DIR','/mnt/hgfs/swoole/chatroom/rooms/');
 
 4.命令行执行 ：
 
