@@ -261,15 +261,12 @@ class Room
     public static function getUsersByRoom($roomId)
     {
         $lists = self::selectRoomFd($roomId);
-
         $arr = [];
         foreach ($lists as $k => $v) {
             $userId = self::getUserId($v);
             $userInfo = self::getRedis()->hGet(self::$chatUser, $userId);
-
             $arr[] = json_decode($userInfo, true);
         }
-
         return $arr;
 
     }
